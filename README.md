@@ -25,6 +25,7 @@ The idea is that one creates a class that implements the `BotStrategyBase` class
 ## Running the bot
 This project uses `slackbots` npm package to run a slackbot.  The `npm start` script calls the following example file to start the bot.
 
+#### bin/bot.js
 ```
 #!/usr/bin/env node
 
@@ -48,6 +49,43 @@ const strategyHandler = new StrategyHandler(strategies);
 const bot = new Bot(settings, strategyHandler);
 
 bot.run();
+```
+
+##### Example strategy
+```
+'use strict';
+
+const BotStrategyBase = require('../bot-strategy-base');
+
+class ExampleStrategy extends BotStrategyBase {
+  constructor() {
+    super('Example');
+  }
+
+  getKeys() {
+    return ['example-key'];
+  }
+
+  getUsage() {
+    return this.getKeys().map(key => {
+      return `${key} \`{some-random-extra-parameter}\``;
+    });
+  }
+
+  canHandle(message) {
+    return this.getKey(message) != null;
+  }
+
+  getKey(message) {
+    return this.getKeys().find( key => { return message.text.indexOf(key) != -1 }) || null;
+  }
+
+  handle(message) {
+    return Promise.resolve(`This is an answer from example with original message: \`${message.text}\``);
+  }
+}
+
+module.exports = ExampleStrategy;
 ```
 
 ## TODO
