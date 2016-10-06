@@ -1,22 +1,22 @@
 {
-  "name": "slack-strategy-bot",
+  "name": "slackbot-dispatch",
   "version": "1.0.0",
   "description": "Slackbots add-on to help with adding functionality to a slackbot",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --harmony bin/bot.js"
+    "install": "./scripts/install.sh"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/blaw2422/slack-strategy-bot.git"
+    "url": "https://github.com/blaw2422/slackbot-dispatch.git"
   },
   "author": "Brandon Law",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/blaw2422/slack-strategy-bot/issues"
+    "url": "https://github.com/blaw2422/slackbot-dispatch/issues"
   },
-  "homepage": "https://github.com/blaw2422/slack-strategy-bot",
+  "homepage": "https://github.com/blaw2422/slackbot-dispatch",
   "bundledDependencies": [
     "log4js",
     "slackbots"
