@@ -1,92 +1,87 @@
-# Slack Strategy Bot
+# Slack Bot Dispatch
 
 > Helping organize code for slackbots to quickly add functionality
 
-The idea with this codebase is to provide a small framework for adding "strategies" to a slackbot.  Think of a strategy like a question, answer pair.  Each strategy is a combination of a **key**, **answer**, and **usage**.  
+The idea with this codebase is to provide a small framework for adding "strategies" to a slackbot.  Think of a strategy like a question, answer pair.
 
 Hopefully, with this framework, you will only have to code new **strategies** instead of worrying about running a slackbot.
 
-### Key
-The key is how a user tells the slackbot which question in which to give an answer
-
-### Answer
-The answer is the message slackbot responds with.  There is a method that returns the string to be displayed called `handle` which should be implemented to return a Promise that resolves a string.
-
-### Usage
-The usage method helps to tell the users of the slackbot how to format their questions.
+## Installing and Running
+Literally, install the npm package and run `npm start`.  An example strategy will be installed as well.
+> Note: there are 2 environment variables that need to be set
+> * BOT_NAME
+> * BOT_API_KEY
 
 ```
-@slackbot-name {key goes here} [{any} {number} {of} {parameters} {goes} {here}]
+ $ export BOT_API_KEY=xyz
+ $ export BOT_NAME=leeeroyjenkins
+ $ npm install slackbot-dispatch
+ $ npm start
 ```
+> Note: log4js is used to log certain events, set **LOG_LEVEL** environment variable to change output
+
+-------
+## Usages
+Once the slackbot is running, you can ask questions.
+
+### Show Usages
+![text](docs/img/show-usages.png)
+
+### Valid Strategy
+![text](docs/img/get-answer.png)
+
+### Invalid Strategy
+![text](docs/img/answer-not-found.png)
+
+-------
+## Strategies explained
+The idea is that there is a directory of strategies that are the interface to your slackbot's functionality.  Each strategy has a way of determining if it can handle the current messaging coming in, and returning the output for that message or request from a user.
+The strategy manager loops through the directory of strategies, defaulted to `lib/strategies`, and uses those throughout the life of the slackbot.
+
+Every message coming in is examined to determine if it meets the following criteria.  If so, it is sent to the dispatcher to determine if any of the strategies can handle the current message.
+* Does the message mention the slackbot?
+* Is the user _not_ the slackbot?
+* Is the message in a Channel or Group?
+* Is the message an actual "chat" message (slack sends lots of messages like files being uploaded, users joining a channel, etc)
 
 ## Implementing a new strategy
-The idea is that one creates a class that implements the `BotStrategyBase` class, and include the strategy when creating the bot.  Everything else should just work.  There is an example in the *strategies* directory.
+The idea is that one creates a class that implements the `BotStrategyBase` class.  By putting the strategy into the `lib/strategies` folder, the strategy should be included on startup.  Everything else should just work.  There is an example in the `lib/strategies` directory.
+> There is an example copied into the target folder on install.
 
-## Running the bot
-This project uses `slackbots` npm package to run a slackbot.  The `npm start` script calls the following example file to start the bot.
+[Example strategy](lib/strategies/example-strategy.js)
 
-#### bin/bot.js
+### Methods
+
+#### getKeys
+Returns the messages that a single strategy will respond to. The key is how a user tells the slackbot which question in which to give an answer
+
+| Method Name | Params | Result | Description |
+| --- | --- | --- | --- |
+| **getKeys** | none | `string[]` | Returns the messages that a single strategy will respond to. The key is how a user tells the slackbot which question in which to give an answer |
+| **getUsage** | none | `string[]` | The usage method helps to tell the users of the slackbot how to format their questions.|
+| **canHandle** | `message` | `boolean` | Has a default implementation to try to match part of the incoming message to the current keys.  To change the behavior, implement in the strategy to override the base functionality. |
+| **handle** | `message` | `string` | Returns the message that the slackbot will respond with. Should be implemented to return a Promise that resolves a string. |
+
+#### Message example
 ```
-#!/usr/bin/env node
-
-'use strict';
-
-const Bot = require('../lib/slack-strategy-bot');
-const StrategyHandler = require('../lib/strategy-handler');
-const strategies = require('../lib/strategies');
-
-const token = process.env.BOT_API_KEY;
-const assert = require('assert', "'BOT_API_KEY' environment variable required.");
-
-const name = process.env.BOT_NAME || 'SlackStrategyBot';
-
-const settings = {
-  token: token,
-  name: name
-};
-
-const strategyHandler = new StrategyHandler(strategies);
-const bot = new Bot(settings, strategyHandler);
-
-bot.run();
-```
-
-##### Example strategy
-```
-'use strict';
-
-const BotStrategyBase = require('../bot-strategy-base');
-
-class ExampleStrategy extends BotStrategyBase {
-  constructor() {
-    super('Example');
-  }
-
-  getKeys() {
-    return ['example-key'];
-  }
-
-  getUsage() {
-    return this.getKeys().map(key => {
-      return `${key} \`{some-random-extra-parameter}\``;
-    });
-  }
-
-  canHandle(message) {
-    return this.getKey(message) != null;
-  }
-
-  getKey(message) {
-    return this.getKeys().find( key => { return message.text.indexOf(key) != -1 }) || null;
-  }
-
-  handle(message) {
-    return Promise.resolve(`This is an answer from example with original message: \`${message.text}\``);
-  }
+{
+  type: 'message',
+  channel: 'ABCDEFG',
+  user: 'U0D98DJS',
+  text: '<@U04L00> example-key whats up',
+  ts: '1475840569.000306',
+  team: 'T0293DLD8',
+  isChannel: false,
+  isGroup: true,
+  changedText: 'example-key whats up'
 }
-
-module.exports = ExampleStrategy;
 ```
+> Note: `changedText` is `text` with the **userId** replaced from the beginning
 
-## TODO
-The idea is to turn this into an NPM package that can be added to a project.  The goal would be for the consumers to only add strategy classes and execute the included `npm start` script
+## Customization
+
+#### Strategy Directory
+By default, the bot will look for strategies in the `lib/strategies` dir.  To change this, set the `SLACK_STRATEGY_DIR` environment variable to a filepath.
+
+#### Logging
+[Log4js](http://stritti.github.io/log4js/) is used for logging.  Set the `LOG_LEVEL` to the desired level for output.

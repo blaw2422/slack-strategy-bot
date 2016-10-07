@@ -1,22 +1,20 @@
 #!/usr/bin/env node
 
 'use strict';
+const path = require('path');
+const assert = require('assert');
 
-const Bot = require('../lib/slack-strategy-bot');
-const StrategyHandler = require('../lib/strategy-handler');
-const strategies = require('../lib/strategies');
-
-const token = process.env.BOT_API_KEY;
-const assert = require('assert', "'BOT_API_KEY' environment variable required.");
-
-const name = process.env.BOT_NAME || 'SlackStrategyBot';
+const Bot = require('slackbot-dispatch/lib/slack-strategy-bot');
+const StrategyHandler = require('slackbot-dispatch/lib/strategy-handler');
 
 const settings = {
-  token: token,
-  name: name
+  token: process.env.BOT_API_KEY,
+  name: process.env.BOT_NAME
 };
 
-const strategyHandler = new StrategyHandler(strategies);
-const bot = new Bot(settings, strategyHandler);
+assert(settings.token, "'BOT_API_KEY' environment variable required.");
+assert(settings.name, "'BOT_NAME' environment variable required.");
+
+const bot = new Bot(settings, process.env.SLACK_STRATEGY_DIR);
 
 bot.run();
